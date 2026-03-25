@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="TokenTrend — AI-powered cryptocurrency prediction dashboard with real-time analytics and machine learning forecasts.">
+  <title>TokenTrend — AI Crypto Predictor</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+</head>
+<body>
+  <div class="app">
+    <!-- ── Header ──────────────────────────────────────── -->
+    <header class="header fade-in">
+      <div class="header__brand">
+        <div class="header__logo">📈</div>
+        <div>
+          <h1 class="header__title">TokenTrend</h1>
+          <p class="header__subtitle">AI-Powered Crypto Prediction Engine</p>
+        </div>
+      </div>
+      <div class="header__meta">
+        <div class="header__status">
+          <span class="header__status-dot"></span>
+          <span id="lastUpdate">Loading...</span>
+        </div>
+        <button class="header__refresh" id="refreshBtn" onclick="app.refresh()">
+          <span class="refresh-icon">↻</span>
+          Refresh
+        </button>
+      </div>
+    </header>
+
+    <!-- ── Token Selector Bar ──────────────────────────── -->
+    <nav class="token-bar fade-in fade-in-delay-1" id="tokenBar">
+      <!-- Populated by JS -->
+    </nav>
+
+    <!-- ── Dashboard Grid ──────────────────────────────── -->
+    <main class="dashboard">
+
+      <!-- Price Hero -->
+      <section class="card price-hero fade-in fade-in-delay-2" id="priceHero">
+        <div class="card__header">
+          <span class="card__title" id="heroTokenName">Loading...</span>
+          <span class="card__badge" id="heroRank"></span>
+        </div>
+        <div class="price-hero__main">
+          <span class="price-hero__value" id="heroPrice">—</span>
+          <span class="price-hero__change" id="heroChange">—</span>
+        </div>
+        <div class="price-hero__stats">
+          <div class="price-hero__stat">
+            <span class="price-hero__stat-label">24h Volume</span>
+            <span class="price-hero__stat-value" id="heroVolume">—</span>
+          </div>
+          <div class="price-hero__stat">
+            <span class="price-hero__stat-label">Market Cap</span>
+            <span class="price-hero__stat-value" id="heroMcap">—</span>
+          </div>
+          <div class="price-hero__stat">
+            <span class="price-hero__stat-label">24h High</span>
+            <span class="price-hero__stat-value" id="heroHigh">—</span>
+          </div>
+          <div class="price-hero__stat">
+            <span class="price-hero__stat-label">24h Low</span>
+            <span class="price-hero__stat-value" id="heroLow">—</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- AI Prediction Card -->
+      <section class="card prediction-card fade-in fade-in-delay-3" id="predictionCard">
+        <div class="card__header">
+          <span class="card__title">🤖 AI Prediction</span>
+          <span class="card__badge" style="background: var(--accent-glow); color: var(--accent-primary);" id="predModelBadge">Logistic Regression</span>
+        </div>
+
+        <!-- Prediction Badge -->
+        <div class="prediction__badge" id="predBadge">
+          <span class="prediction__badge-arrow" id="predArrow">—</span>
+          <span id="predDirection">Loading...</span>
+        </div>
+
+        <!-- Confidence -->
+        <div class="confidence">
+          <div class="confidence__header">
+            <span class="confidence__label">Confidence</span>
+            <span class="confidence__value" id="predConfidence">—</span>
+          </div>
+          <div class="confidence__bar">
+            <div class="confidence__fill" id="predConfBar" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <!-- Signal -->
+        <div class="signal">
+          <div class="signal__label">Signal Strength</div>
+          <div class="signal__text" id="predSignal">—</div>
+        </div>
+
+        <!-- Explainability -->
+        <div class="explain">
+          <div class="explain__title">
+            <span>💡</span> Why this prediction?
+          </div>
+          <div class="explain__list" id="explainList">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Model Info -->
+        <div class="model-info">
+          <span>Model accuracy: <span class="model-info__accuracy" id="predAccuracy">—</span></span>
+          <span id="predSamples">—</span>
+        </div>
+      </section>
+
+      <!-- Chart Card -->
+      <section class="card chart-card fade-in fade-in-delay-4" id="chartCard">
+        <div class="card__header">
+          <span class="card__title">Price Chart</span>
+          <div class="chart-tabs">
+            <button class="chart-tab active" data-days="7" onclick="app.setChartRange(7, this)">7D</button>
+            <button class="chart-tab" data-days="14" onclick="app.setChartRange(14, this)">14D</button>
+            <button class="chart-tab" data-days="30" onclick="app.setChartRange(30, this)">30D</button>
+            <button class="chart-tab" data-days="90" onclick="app.setChartRange(90, this)">90D</button>
+            <button class="chart-tab" data-days="365" onclick="app.setChartRange(365, this)">1Y</button>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="priceChart"></canvas>
+        </div>
+      </section>
+
+      <!-- Multi-Token Comparison -->
+      <section class="card comparison-card fade-in" id="comparisonCard">
+        <div class="card__header">
+          <span class="card__title">🏆 Multi-Token Predictions</span>
+          <span class="card__badge" style="background: var(--yellow-dim); color: var(--yellow);">Ranked by Signal</span>
+        </div>
+        <div style="overflow-x: auto;">
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Token</th>
+                <th>Price</th>
+                <th>24h</th>
+                <th>Prediction</th>
+                <th>Confidence</th>
+                <th>Signal</th>
+                <th>7D Chart</th>
+              </tr>
+            </thead>
+            <tbody id="comparisonBody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
