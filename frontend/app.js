@@ -56,11 +56,27 @@ function updateDOM(id, text, colorClass = null) {
   }
 }
 
+const apiCache = {};
+const CACHE_TTL = 60000; // 60 seconds
+
+async function fetchWithCache(key, url) {
+  const now = Date.now();
+  if (apiCache[key] && now - apiCache[key].timestamp < CACHE_TTL) {
+    return apiCache[key].data;
+  }
+  
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  const data = await res.json();
+  
+  apiCache[key] = { timestamp: now, data };
+  return data;
+}
+
 // 1. Fetch live market info
 async function fetchMarketData(coinId) {
   try {
-    const res = await fetch(`${COINGECKO_API}/coins/markets?vs_currency=usd&ids=${coinId}&price_change_percentage=24h`);
-    const data = await res.json();
+    const data = await fetchWithCache(`market_${coinId}`, `${COINGECKO_API}/coins/markets?vs_currency=usd&ids=${coinId}&price_change_percentage=24h`);
     return data[0];
   } catch (err) {
     console.error("Market fetch error", err);
@@ -71,8 +87,7 @@ async function fetchMarketData(coinId) {
 // 2. Fetch historical data (needed for ML model features like RSI, Volume Ratio)
 async function fetchHistoricalData(coinId) {
   try {
-    const res = await fetch(`${COINGECKO_API}/coins/${coinId}/market_chart?vs_currency=usd&days=30&interval=daily`);
-    return await res.json();
+    return await fetchWithCache(`history_${coinId}`, `${COINGECKO_API}/coins/${coinId}/market_chart?vs_currency=usd&days=30&interval=daily`);
   } catch (err) {
     console.error("Historical fetch error", err);
     return null;
